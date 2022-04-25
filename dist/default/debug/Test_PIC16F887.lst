@@ -1,0 +1,405 @@
+CC5X Version 3.7C,   File: Test_PIC16F887.c    16. Jan 2019  13:24   Page 1
+
+ADDR CODE  LINE SOURCE
+
+           0001 
+           0002 ; CC5X Version 3.7C, Copyright (c) B Knudsen Data
+           0003 ; C compiler for the PICmicro family
+           0004 ; ************  16. Jan 2019  13:24  *************
+           0005 
+           0006         processor  16F887
+           0007         radix  DEC
+           0008 
+2007 00F4  0009         __config 0x2007, 0xF4
+2008 3EFF  0010         __config 0x2008, 0x3EFF
+           0011 
+     0003  0012 STATUS      EQU   0x03
+     0004  0013 FSR         EQU   0x04
+     0005  0014 PORTA       EQU   0x05
+     0085  0015 TRISA       EQU   0x85
+     0006  0016 PORTB       EQU   0x06
+     0086  0017 TRISB       EQU   0x86
+     000A  0018 PCLATH      EQU   0x0A
+     0006  0019 INTEDG      EQU   6
+     0000  0020 Carry       EQU   0
+     0002  0021 Zero_       EQU   2
+     0005  0022 RP0         EQU   5
+     0006  0023 RP1         EQU   6
+     0000  0024 RBIF        EQU   0
+     0004  0025 INTE        EQU   4
+     0007  0026 GIE         EQU   7
+     0007  0027 PORTC       EQU   0x07
+     0087  0028 TRISC       EQU   0x87
+     0096  0029 IOCB        EQU   0x96
+     0188  0030 ANSEL       EQU   0x188
+     0189  0031 ANSELH      EQU   0x189
+     0000  0032 S_M1_Valid  EQU   0
+     0001  0033 S_M1_Sens   EQU   1
+     0003  0034 S_M2_Valid  EQU   3
+     0002  0035 S_M2_Sens   EQU   2
+     0023  0036 compteur1   EQU   0x23
+     0024  0037 compteur2   EQU   0x24
+     0025  0038 mem_portb   EQU   0x25
+     0000  0039 etat_rb0    EQU   0
+     0001  0040 etat_rb1    EQU   1
+     0070  0041 svrWREG     EQU   0x70
+     0020  0042 svrSTATUS   EQU   0x20
+     0021  0043 svrPCLATH   EQU   0x21
+     0022  0044 sv_FSR      EQU   0x22
+     007F  0045 millisec    EQU   0x7F
+     007F  0046 i           EQU   0x7F
+     007F  0047 i2          EQU   0x7F
+     007F  0048 microsec    EQU   0x7F
+     007F  0049 i2_2        EQU   0x7F
+     007F  0050 i_2         EQU   0x7F
+           0051 
+0000 2893  0052         GOTO main
+           0053 
+           0054   ; FILE Test_PIC16F887.c
+           0055                         ;#pragma chip PIC16F887
+           0056                         ;#pragma config=0x00F4     //Bit13   Debug=1  Sans //20D4
+           0057                         ;                          //Bit12   LVP=0
+           0058                         ;                          //Bit11   FCMEN=0
+           0059                         ;                          //Bit10   IESO=0
+           0060                         ;                          //Bit9-8  BOR=00
+CC5X Version 3.7C,   File: Test_PIC16F887.c    16. Jan 2019  13:24   Page 2
+
+ADDR CODE  LINE SOURCE
+
+           0061                         ;                          //Bit7    CPD=1
+           0062                         ;                          //Bit6    CP=1
+           0063                         ;                          //Bit5    MCLRE=0    MCLR=RE3
+           0064                         ;                          //Bit4    PWRTE=1
+           0065                         ;                          //Bit3    WDTE=0     //WachDOG=0
+           0066                         ;                          //Bit2-0  FOSC=010      HS:010     Interne:100        
+           0067                         ;#pragma config reg2=0x3EFF    //Bit13-11  111
+           0068                         ;                          //Bit10-9   11
+           0069                         ;                          //Bit8      0
+           0070                         ;                          //Bit7-0    11111111
+           0071                         ;
+           0072                         ;#include <int16CXX.H>
+           0073                         ;
+           0074                         ;#pragma bit S_M1_Valid        @ PORTC.0
+           0075                         ;#pragma bit S_M1_Sens         @ PORTC.1
+           0076                         ;#pragma bit S_M2_Valid        @ PORTC.3
+           0077                         ;#pragma bit S_M2_Sens         @ PORTC.2
+           0078                         ;
+           0079                         ;uns8 compteur1,compteur2;
+           0080                         ;uns8 mem_portb;
+           0081                         ;bit etat_rb0,etat_rb1;
+           0082                         ;
+           0083                         ;#pragma library 0
+           0084                         ;
+           0085                         ;#pragma origin 4
+     0000  0086         ORG 0x0004
+           0087                         ;interrupt int_server(void)
+           0088                         ;   {
+           0089 int_server
+           0090                         ;    int_save_registers
+0004 00F0  0091         MOVWF svrWREG
+0005 0E03  0092         SWAPF STATUS,W
+0006 1283  0093         BCF   0x03,RP0
+0007 1303  0094         BCF   0x03,RP1
+0008 00A0  0095         MOVWF svrSTATUS
+0009 080A  0096         MOVF  PCLATH,W
+000A 00A1  0097         MOVWF svrPCLATH
+000B 018A  0098         CLRF  PCLATH
+           0099                         ;    char sv_FSR = FSR;
+000C 0804  0100         MOVF  FSR,W
+000D 00A2  0101         MOVWF sv_FSR
+           0102                         ;
+           0103                         ;    if (RBIF)
+000E 1C0B  0104         BTFSS 0x0B,RBIF
+000F 2835  0105         GOTO  m007
+           0106                         ;      {
+           0107                         ;        RBIF=0;
+0010 100B  0108         BCF   0x0B,RBIF
+           0109                         ;        mem_portb=PORTB;
+0011 0806  0110         MOVF  PORTB,W
+0012 00A5  0111         MOVWF mem_portb
+           0112                         ;        
+           0113                         ;        if (mem_portb.0!=etat_rb0)
+0013 1825  0114         BTFSC mem_portb,0
+0014 2818  0115         GOTO  m001
+0015 1826  0116         BTFSC 0x26,etat_rb0
+0016 281C  0117         GOTO  m002
+0017 281F  0118         GOTO  m003
+0018 1283  0119 m001    BCF   0x03,RP0
+0019 1303  0120         BCF   0x03,RP1
+CC5X Version 3.7C,   File: Test_PIC16F887.c    16. Jan 2019  13:24   Page 3
+
+ADDR CODE  LINE SOURCE
+
+001A 1826  0121         BTFSC 0x26,etat_rb0
+001B 281F  0122         GOTO  m003
+           0123                         ;            compteur1++;
+001C 1283  0124 m002    BCF   0x03,RP0
+001D 1303  0125         BCF   0x03,RP1
+001E 0AA3  0126         INCF  compteur1,1
+           0127                         ;        if (mem_portb.1!=etat_rb1)
+001F 1283  0128 m003    BCF   0x03,RP0
+0020 1303  0129         BCF   0x03,RP1
+0021 18A5  0130         BTFSC mem_portb,1
+0022 2826  0131         GOTO  m004
+0023 18A6  0132         BTFSC 0x26,etat_rb1
+0024 282A  0133         GOTO  m005
+0025 282D  0134         GOTO  m006
+0026 1283  0135 m004    BCF   0x03,RP0
+0027 1303  0136         BCF   0x03,RP1
+0028 18A6  0137         BTFSC 0x26,etat_rb1
+0029 282D  0138         GOTO  m006
+           0139                         ;            compteur2++;        
+002A 1283  0140 m005    BCF   0x03,RP0
+002B 1303  0141         BCF   0x03,RP1
+002C 0AA4  0142         INCF  compteur2,1
+           0143                         ;        
+           0144                         ;        etat_rb0=mem_portb.0;
+002D 1283  0145 m006    BCF   0x03,RP0
+002E 1303  0146         BCF   0x03,RP1
+002F 1026  0147         BCF   0x26,etat_rb0
+0030 1825  0148         BTFSC mem_portb,0
+0031 1426  0149         BSF   0x26,etat_rb0
+           0150                         ;        etat_rb1=mem_portb.1;
+0032 10A6  0151         BCF   0x26,etat_rb1
+0033 18A5  0152         BTFSC mem_portb,1
+0034 14A6  0153         BSF   0x26,etat_rb1
+           0154                         ;        
+           0155                         ;        
+           0156                         ;   }
+           0157                         ;
+           0158                         ;    FSR = sv_FSR;
+0035 1283  0159 m007    BCF   0x03,RP0
+0036 1303  0160         BCF   0x03,RP1
+0037 0822  0161         MOVF  sv_FSR,W
+0038 0084  0162         MOVWF FSR
+           0163                         ;    int_restore_registers
+0039 0821  0164         MOVF  svrPCLATH,W
+003A 008A  0165         MOVWF PCLATH
+003B 0E20  0166         SWAPF svrSTATUS,W
+003C 0083  0167         MOVWF STATUS
+003D 0EF0  0168         SWAPF svrWREG,1
+003E 0E70  0169         SWAPF svrWREG,W
+           0170                         ;   }
+003F 0009  0171         RETFIE
+           0172                         ;
+           0173                         ;
+           0174                         ;
+           0175                         ;//Déclaration des différentes variables
+           0176                         ;
+           0177                         ;void delay_ms(uns16 millisec);
+           0178                         ;void delay_us(uns16 microsec);
+           0179                         ;
+           0180                         ;void delay_ms(uns16 millisec)
+CC5X Version 3.7C,   File: Test_PIC16F887.c    16. Jan 2019  13:24   Page 4
+
+ADDR CODE  LINE SOURCE
+
+           0181                         ;   {
+           0182 delay_ms
+           0183                         ;    uns16 i,i2;
+           0184                         ;    for (i2=0;i2<millisec;i2++)
+0040 01FF  0185         CLRF  i2
+0041 01FF  0186         CLRF  i2+1
+0042 087F  0187 m008    MOVF  millisec+1,W
+0043 027F  0188         SUBWF i2+1,W
+0044 1C03  0189         BTFSS 0x03,Carry
+0045 284C  0190         GOTO  m009
+0046 1D03  0191         BTFSS 0x03,Zero_
+0047 2860  0192         GOTO  m013
+0048 087F  0193         MOVF  millisec,W
+0049 027F  0194         SUBWF i2,W
+004A 1803  0195         BTFSC 0x03,Carry
+004B 2860  0196         GOTO  m013
+           0197                         ;      for (i=0;i<350;i++);
+004C 01FF  0198 m009    CLRF  i
+004D 01FF  0199         CLRF  i+1
+004E 3001  0200 m010    MOVLW 1
+004F 027F  0201         SUBWF i+1,W
+0050 1C03  0202         BTFSS 0x03,Carry
+0051 2858  0203         GOTO  m011
+0052 1D03  0204         BTFSS 0x03,Zero_
+0053 285C  0205         GOTO  m012
+0054 305E  0206         MOVLW 94
+0055 027F  0207         SUBWF i,W
+0056 1803  0208         BTFSC 0x03,Carry
+0057 285C  0209         GOTO  m012
+0058 0AFF  0210 m011    INCF  i,1
+0059 1903  0211         BTFSC 0x03,Zero_
+005A 0AFF  0212         INCF  i+1,1
+005B 284E  0213         GOTO  m010
+005C 0AFF  0214 m012    INCF  i2,1
+005D 1903  0215         BTFSC 0x03,Zero_
+005E 0AFF  0216         INCF  i2+1,1
+005F 2842  0217         GOTO  m008
+           0218                         ;   }
+0060 0008  0219 m013    RETURN
+           0220                         ;
+           0221                         ;void delay_us(uns16 microsec)
+           0222                         ;   {
+           0223 delay_us
+           0224                         ;    uns16 i2,i;
+           0225                         ;    i=microsec/4;
+0061 1003  0226         BCF   0x03,Carry
+0062 0C7F  0227         RRF   microsec+1,W
+0063 00FF  0228         MOVWF i_2+1
+0064 0C7F  0229         RRF   microsec,W
+0065 00FF  0230         MOVWF i_2
+0066 1003  0231         BCF   0x03,Carry
+0067 0CFF  0232         RRF   i_2+1,1
+0068 0CFF  0233         RRF   i_2,1
+           0234                         ;    for (i2=0;i2<i;i2++);
+0069 01FF  0235         CLRF  i2_2
+006A 01FF  0236         CLRF  i2_2+1
+006B 087F  0237 m014    MOVF  i_2+1,W
+006C 027F  0238         SUBWF i2_2+1,W
+006D 1C03  0239         BTFSS 0x03,Carry
+006E 2875  0240         GOTO  m015
+CC5X Version 3.7C,   File: Test_PIC16F887.c    16. Jan 2019  13:24   Page 5
+
+ADDR CODE  LINE SOURCE
+
+006F 1D03  0241         BTFSS 0x03,Zero_
+0070 2879  0242         GOTO  m016
+0071 087F  0243         MOVF  i_2,W
+0072 027F  0244         SUBWF i2_2,W
+0073 1803  0245         BTFSC 0x03,Carry
+0074 2879  0246         GOTO  m016
+0075 0AFF  0247 m015    INCF  i2_2,1
+0076 1903  0248         BTFSC 0x03,Zero_
+0077 0AFF  0249         INCF  i2_2+1,1
+0078 286B  0250         GOTO  m014
+           0251                         ;   }
+0079 0008  0252 m016    RETURN
+           0253                         ;
+           0254                         ;
+           0255                         ;void init(void)
+           0256                         ;   {
+           0257 init
+           0258                         ;    //OSCCON=0x79;    //bit7=0  
+           0259                         ;                    //Bit6-4 8MHz:111  
+           0260                         ;                    //Bit3  Osts=1   
+           0261                         ;                    //Bit2  HTS=0
+           0262                         ;                    //Bit1  LTS=0
+           0263                         ;                    //Bit0  SCS=1
+           0264                         ;    
+           0265                         ;    TRISA=0x00;
+007A 1683  0266         BSF   0x03,RP0
+007B 1303  0267         BCF   0x03,RP1
+007C 0185  0268         CLRF  TRISA
+           0269                         ;    ANSEL=0x00;
+007D 1703  0270         BSF   0x03,RP1
+007E 0188  0271         CLRF  ANSEL
+           0272                         ;    ANSELH=0x00;
+007F 0189  0273         CLRF  ANSELH
+           0274                         ;    PORTA=0x00;
+0080 1283  0275         BCF   0x03,RP0
+0081 1303  0276         BCF   0x03,RP1
+0082 0185  0277         CLRF  PORTA
+           0278                         ;    
+           0279                         ;    TRISB=0xFF;
+0083 30FF  0280         MOVLW 255
+0084 1683  0281         BSF   0x03,RP0
+0085 0086  0282         MOVWF TRISB
+           0283                         ;    PORTB=0x00;
+0086 1283  0284         BCF   0x03,RP0
+0087 0186  0285         CLRF  PORTB
+           0286                         ;    IOCB=0x03;
+0088 3003  0287         MOVLW 3
+0089 1683  0288         BSF   0x03,RP0
+008A 0096  0289         MOVWF IOCB
+           0290                         ;    
+           0291                         ;    TRISC=0x00;
+008B 0187  0292         CLRF  TRISC
+           0293                         ;    PORTC=0x00;
+008C 1283  0294         BCF   0x03,RP0
+008D 0187  0295         CLRF  PORTC
+           0296                         ;    //TRISD=0x00;
+           0297                         ;    //PORTD=0x00;
+           0298                         ;    //TRISE=0x00;
+           0299                         ;    //PORTE=0x00;
+           0300                         ;    
+CC5X Version 3.7C,   File: Test_PIC16F887.c    16. Jan 2019  13:24   Page 6
+
+ADDR CODE  LINE SOURCE
+
+           0301                         ;    //GIE = 1;                //Validation de l'ensemble des interruptions              
+           0302                         ;    //RBIE=1;
+           0303                         ;
+           0304                         ;    GIE = 1;			//Validation des interruptions
+008E 178B  0305         BSF   0x0B,GIE
+           0306                         ;    INTE = 1;			//Validation de l?interruption INT0 (RB0)
+008F 160B  0307         BSF   0x0B,INTE
+           0308                         ;    INTEDG = 1;		//Déclenchement sur Front montant 
+0090 1683  0309         BSF   0x03,RP0
+0091 1701  0310         BSF   0x81,INTEDG
+           0311                         ;
+           0312                         ;   }
+0092 0008  0313         RETURN
+           0314                         ;
+           0315                         ;//Programme Principal
+           0316                         ;void main(void)
+           0317                         ;   {
+           0318 main
+           0319                         ;    
+           0320                         ;    
+           0321                         ;    
+           0322                         ;    
+           0323                         ;    
+           0324                         ;    compteur1=1;
+0093 3001  0325         MOVLW 1
+0094 1283  0326         BCF   0x03,RP0
+0095 1303  0327         BCF   0x03,RP1
+0096 00A3  0328         MOVWF compteur1
+           0329                         ;    compteur2=2;
+0097 3002  0330         MOVLW 2
+0098 00A4  0331         MOVWF compteur2
+           0332                         ;    etat_rb0=0;
+0099 1026  0333         BCF   0x26,etat_rb0
+           0334                         ;    etat_rb1=0;
+009A 10A6  0335         BCF   0x26,etat_rb1
+           0336                         ;    init();
+009B 207A  0337         CALL  init
+           0338                         ;    while(1)
+           0339                         ;    {  
+           0340                         ;        PORTC=PORTB;
+009C 1283  0341 m017    BCF   0x03,RP0
+009D 1303  0342         BCF   0x03,RP1
+009E 0806  0343         MOVF  PORTB,W
+009F 0087  0344         MOVWF PORTC
+           0345                         ;        S_M1_Valid=1;        
+00A0 1407  0346         BSF   0x07,S_M1_Valid
+           0347                         ;        S_M1_Sens=1;         
+00A1 1487  0348         BSF   0x07,S_M1_Sens
+           0349                         ;        S_M2_Valid=1;        
+00A2 1587  0350         BSF   0x07,S_M2_Valid
+           0351                         ;        S_M2_Sens=1;
+00A3 1507  0352         BSF   0x07,S_M2_Sens
+           0353                         ;        PORTC=0xAA;
+00A4 30AA  0354         MOVLW 170
+00A5 0087  0355         MOVWF PORTC
+           0356                         ;        
+           0357                         ;    }
+00A6 289C  0358         GOTO  m017
+           0359 
+           0360         END
+CC5X Version 3.7C,   File: Test_PIC16F887.c    16. Jan 2019  13:24   Page 7
+
+ADDR CODE  LINE SOURCE
+
+           0361 
+           0362 
+           0363 ; *** KEY INFO ***
+           0364 
+           0365 ; 0x0004 P0   60 word(s)  2 % : int_server
+           0366 ; 0x0040 P0   33 word(s)  1 % : delay_ms
+           0367 ; 0x0061 P0   25 word(s)  1 % : delay_us
+           0368 ; 0x007A P0   25 word(s)  1 % : init
+           0369 ; 0x0093 P0   20 word(s)  0 % : main
+           0370 
+           0371 ; RAM usage: 8 bytes (4 local), 360 bytes free
+           0372 ; Maximum call level: 1 (+1 for interrupt)
+           0373 ;  Codepage 0 has  164 word(s) :   8 %
+           0374 ;  Codepage 1 has    0 word(s) :   0 %
+           0375 ;  Codepage 2 has    0 word(s) :   0 %
+           0376 ;  Codepage 3 has    0 word(s) :   0 %
+           0377 ; Total of 164 code words (2 %)

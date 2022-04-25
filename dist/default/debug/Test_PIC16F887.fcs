@@ -1,0 +1,21 @@
+
+CC5X Version 3.7C, Copyright (c) B Knudsen Data.
+* FUNCTION CALL STRUCTURE
+
+F: int_server             :#0  : p0
+
+F: delay_ms               :#0  : p0
+
+F: delay_us               :#0  : p0
+
+F: init                   :#1  : p0 <- p0 
+
+F: main                   :#0  : p0
+    init                  : #1  : p0 -> p0
+
+
+ L1  int_server
+
+ L0  main
+ L1    init
+
